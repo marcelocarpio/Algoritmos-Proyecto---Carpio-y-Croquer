@@ -75,18 +75,33 @@ def cargar_detalles_obra(id_obra):
         if resp.status_code == 200:
             id_obra_json = resp.json()
             
-            artista = Artista(nombre=id_obra_json.get("artistDisplayName"), nacionalidad=id_obra_json.get("artistNationality"), nacimiento=id_obra_json.get("artistBeginDate"), muerte=id_obra_json.get("artistEndDate"))
+            artista = Artista(nombre=id_obra_json.get("artistDisplayName", "Desconocido"), nacionalidad=id_obra_json.get("artistNationality", "Desconocida"), nacimiento=id_obra_json.get("artistBeginDate", "Desconocida"),  muerte=id_obra_json.get("artistEndDate", "Desconocida"))
 
-            obra = ObraDeArte(id=id_obra_json.get("objectID"), titulo=id_obra_json.get("title"), artista=artista, clasificacion=id_obra_json.get("classification"), anio=id_obra_json.get("objectDate"), url_imagen=id_obra_json.get("primaryImage"))
-
-            print(f"Detalles de la obra {id_obra} obtenidos con éxito.")
+            obra = ObraDeArte(id=id_obra_json.get("objectID", None), titulo=id_obra_json.get("title", "Desconocido"), artista=artista, clasificacion=id_obra_json.get("classification", "Desconocida"), anio=id_obra_json.get("objectDate", "Desconocida"), url_imagen=id_obra_json.get("primaryImage"))
+            if obra.id==None:
+                print(f"No se obtuvo el ID de la obra {obra.name}")
             return obra
+        
         else:
             print(f"Error. Código de estado: {resp.status_code}. Intentos restantes: {intentos - 1}")
             intentos -= 1
             
     print(f"No se pudieron obtener los detalles de la obra {id_obra}.")
     return None
+
+
+def paginacion_cargar_obras(id_departamento, limite=20):
+    lista_ids = cargar_ids_por_departamento(id_departamento)
+    
+    ids_paginas = lista_ids[:limite]
+    
+    obras_encontradas = []    
+    for id_obra in ids_paginas:
+        obra = cargar_detalles_obra(id_obra)
+        obras_encontradas.append(obra)
+            
+    return obras_encontradas
+
 
 def cargar_nacionalidades_lista():
     """
