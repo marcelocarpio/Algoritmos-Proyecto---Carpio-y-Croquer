@@ -213,7 +213,7 @@ class MetroArt:
             return None
 
         if valor not in lista_ids:
-            print(f"[ERROR] El ID ingresado ({valor}) no existe. IDs válidos: {', '.join(map(str, lista_ids))}.")
+            print(f"[ERROR] El ID ingresado ({valor}) no existe.")
             return None
 
         return valor
@@ -222,8 +222,8 @@ class MetroArt:
         if obra and hasattr(obra, metodo):
             try:
                 obra.resumen()
-            except Exception as e:
-                print(f"No se pudo mostrar el resumen de la obra {obra.id}: {e}")
+            except:
+                print(f"No se pudo mostrar el resumen de la obra {obra.id}.")
         else:
             print(f"[WARNING] Obra inválida o sin método '{metodo}'.")
     
