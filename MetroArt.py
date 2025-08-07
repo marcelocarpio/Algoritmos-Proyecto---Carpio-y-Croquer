@@ -5,9 +5,7 @@ from Obra_Arte import ObraDeArte
 from Artista import Artista
 
 class MetroArt:   
-    def db_inicial(self):
-        resp= requests.get("https://collectionapi.metmuseum.org/public/collection/v1/objects")
-        return resp.json()
+
     def cargar_departamentos(self):
         """
         Obtiene la lista de departamentos del museo y los convierte en objetos.
@@ -27,11 +25,11 @@ class MetroArt:
                 return departamentos_list
                 
             else:
-                print(f"Intento fallido. Código de estado: {resp.status_code}. Intentos restantes: {intentos - 1}")
                 intentos -= 1
         
-        print("No se pudo obtener la lista de departamentos.")
+        print(f"No se pudo obtener la lista de departamentos.\nCódigo de estado: {resp.status_code}")
         return []
+    
     def cargar_ids_por_departamento(self, id_departamento):
         """
         IDs de las obras para un departamento específico.
@@ -50,11 +48,11 @@ class MetroArt:
                 return lista_ids_obras
             
             else:
-                print(f"Error. Código de estado: {resp.status_code}. Intentos restantes: {intentos - 1}")
                 intentos -= 1
                 
-        print(f"No se pudo obtener la lista de IDs.")
+        print(f"No se pudo obtener la lista de IDs.\nCódigo de estado: {resp.status_code}")
         return []
+    
     def cargar_detalles_obra(self, id_obra):
         """
         Obtiene los detalles de una obra y crea un objeto Artista y un objeto ObraDeArte.
@@ -70,17 +68,17 @@ class MetroArt:
                 id_obra_json = resp.json()
                 
                 artista = Artista(nombre=id_obra_json.get("artistDisplayName", "Desconocido"), nacionalidad=id_obra_json.get("artistNationality", "Desconocida"), nacimiento=id_obra_json.get("artistBeginDate", "Desconocida"),  muerte=id_obra_json.get("artistEndDate", "Desconocida"))
-                obra = ObraDeArte(id=id_obra_json.get("objectID", None), titulo=id_obra_json.get("title", "Desconocido"), artista=artista, clasificacion=id_obra_json.get("classification", "Desconocida"), anio=id_obra_json.get("objectDate", "Desconocida"), url_imagen=id_obra_json.get("primaryImage"))
+                obra = ObraDeArte(id=id_obra_json.get("objectID", "No ID"), titulo=id_obra_json.get("title", "Desconocido"), artista=artista, clasificacion=id_obra_json.get("classification", "Desconocida"), anio=id_obra_json.get("objectDate", "Desconocida"), url_imagen=id_obra_json.get("primaryImage"))
                 if obra.id==None:
                     print(f"No se obtuvo el ID de la obra {obra.name}")
                 return obra
             
             else:
-                print(f"Error. Código de estado: {resp.status_code}. Intentos restantes: {intentos - 1}")
                 intentos -= 1
                 
-        print(f"No se pudieron obtener los detalles de la obra {id_obra}.")
+        print(f"No se pudieron obtener los detalles de la obra {id_obra}.\nCódigo de estado: {resp.status_code}")
         return None
+    
     def paginacion_cargar_obras(self, id_departamento, limite=20):
         lista_ids = self.cargar_ids_por_departamento(id_departamento)
 
@@ -99,7 +97,7 @@ class MetroArt:
         Retorna una lista con las nacionalidades.
         """
         nacionalidades = []
-        with open('PROYECTO/lista_nacionalidades.csv', 'r') as lista_nacionalidades:
+        with open('lista_nacionalidades.csv', 'r') as lista_nacionalidades:
 
             for nacion in lista_nacionalidades:
                 pais=nacion.strip()
@@ -122,10 +120,9 @@ class MetroArt:
                 return ids_por_nacionalidad
 
             else:
-                print(f"Error. Código de estado: {resp.status_code}. Intentos restantes: {intentos - 1}")
                 intentos -= 1
 
-        print(f"Error al cargar las obras de {nacionalidad}")
+        print(f"Error al cargar las obras de {nacionalidad}\nCódigo de estado: {resp.status_code}")
         return []
 
     def buscar_por_autor(self, autor):
@@ -143,25 +140,31 @@ class MetroArt:
                 return ids_por_autor
 
             else:
-                print(f"Error. Código de estado: {resp.status_code}. Intentos restantes: {intentos - 1}")
                 intentos -= 1
 
-        print(f"Error al cargar las obras de {autor}")
+        print(f"Error al cargar las obras de {autor}\nCódigo de estado: {resp.status_code}")
         return []
 
     def start(self):
         while True:
+            print()
+            print("-"*30)
+            print("Bienvenido a MetroArt")
             opcion = input('''\tMenu
 1. Buscar Obras
 2. Mostrar detalles de una obra
 3. Salir
->>>''')
+>>> ''')
+
             if opcion == '1':
-                opcion1 = input('''\tMenu
+                print("-"*30)
+                opcion1 = input('''\tSeleccione una opcion
 1. Buscar Obras por Departamento
 2. Buscar Obras por Nacionalidad del autor
 3. Mostrar Obras por nombre del autor
->>>''')
+>>> ''')
+                print("-"*30)
+
                 if opcion1 == '1':
                     self.busqueda_dpto()
                 elif opcion1 == '2':
@@ -170,7 +173,7 @@ class MetroArt:
                     self.busqueda_autor()
 
             elif opcion == '2':
-                self.mostrar_detalles_y_imagen
+                self.mostrar_detalles_y_imagen()
 
             elif opcion == '3':
                 print('Saliendo...')
@@ -192,8 +195,11 @@ class MetroArt:
         else:
             for id_obra in obras[:20]:
                 obra = self.cargar_detalles_obra(id_obra)
-                obra.resumen()
-
+                if obra is not None:
+                    obra.resumen()
+                else:
+                    print(f"{id_obra} - Error: No se encontró la obra.")
+                
     def busqueda_nacionalidad(self):
         lista_nacionalidades = self.cargar_nacionalidades_lista()
         print('-'*30)
